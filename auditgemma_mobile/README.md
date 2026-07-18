@@ -44,6 +44,9 @@ flutter install
 
 *(Alternatively, you can find the built file at `build/app/outputs/flutter-apk/app-debug.apk` and transfer/sideload it manually).*
 
+> [!WARNING]
+> **App Icon Updates (Android Cache)**: If you update the app icon, Android often aggressively caches the old icon on the home screen. **Do not panic** if you rebuild the app for demo day and still see the default Flutter logo. To fix this, you must **fully uninstall** the existing app from the device first, then install the fresh APK.
+
 ### Re-checking Network Config at the Venue
 If you are using the "Laptop Local IP" approach, **remember that your IP address will change when you connect to the hackathon venue's Wi-Fi.** 
 You MUST re-run the `flutter build apk` command with the new IP address on the morning of the demo and re-install the app.

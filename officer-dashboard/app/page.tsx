@@ -28,7 +28,9 @@ export default function CaseQueuePage() {
     setLoading(true);
     setError(null);
     try {
-      const data = await getCases();
+      let data = await getCases();
+      const hidden = JSON.parse(localStorage.getItem("hidden_cases") || "[]");
+      data = data.filter((c) => !hidden.includes(c.case_id));
       setCases(data);
     } catch (err) {
       if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
@@ -75,14 +77,29 @@ export default function CaseQueuePage() {
             {filteredCases.length} showing
           </p>
         </div>
-        <button
-          onClick={fetchCases}
-          className="officer-action-btn officer-btn-request-docs"
-          disabled={loading}
-        >
-          <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-          Refresh
-        </button>
+        <div style={{ display: "flex", gap: "12px" }}>
+          <button
+            onClick={() => {
+              const currentIds = cases.map(c => c.case_id);
+              const hidden = JSON.parse(localStorage.getItem("hidden_cases") || "[]");
+              localStorage.setItem("hidden_cases", JSON.stringify([...hidden, ...currentIds]));
+              fetchCases();
+            }}
+            className="officer-action-btn"
+            style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", color: "var(--text-secondary)" }}
+            title="Hide all current cases (Demo only)"
+          >
+            Clear UI
+          </button>
+          <button
+            onClick={fetchCases}
+            className="officer-action-btn officer-btn-request-docs"
+            disabled={loading}
+          >
+            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {/* Filters */}

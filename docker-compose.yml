@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      # Use host.docker.internal to connect to Ollama running on the Windows host
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      # Increase timeout to 300s to allow slow laptops time to process large images like Bank Statements
+      - GEMMA_TIMEOUT_FAST=300.0
+    networks:
+      - auditgemma-net
+
+  officer-dashboard:
+    build:
+      context: ./officer-dashboard
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      # The frontend can talk to the backend container directly for server-side fetches (if any), 
+      # but client-side fetches will hit localhost:8000 on the user's browser
+      - NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
+    networks:
+      - auditgemma-net
+
+networks:
+  auditgemma-net:
+    driver: bridge

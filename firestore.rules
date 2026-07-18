@@ -1,0 +1,27 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Check if the user is an officer. 
+    // For a hackathon, this might be a custom claim, or you can just allow all 
+    // authenticated users if you aren't strictly registering SMEs yet.
+    function isOfficer() {
+      return request.auth.token.get('officer', false) == true || 
+             request.auth.token.email.matches('.*@auditgemma\\.com');
+    }
+
+    match /cases/{caseId} {
+      // Allow read if the user is an authenticated officer, 
+      // OR if they are the SME who submitted the case (owner_uid matches)
+      allow read: if request.auth != null && (
+        isOfficer() || 
+        resource.data.owner_uid == request.auth.uid
+      );
+
+      // DENY ALL client writes.
+      // All writes must go through the FastAPI backend via POST/PATCH.
+      // The backend uses the Firebase Admin SDK, which bypasses these rules by design.
+      allow write: if false;
+    }
+  }
+}

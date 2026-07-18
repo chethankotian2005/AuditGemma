@@ -1,0 +1,54 @@
+from pydantic import BaseModel, Field
+from typing import Literal
+
+
+class ExtractionResponse(BaseModel):
+    document_type: str
+    extracted_entities: dict
+    amounts: list[float]
+    transactions: list[dict]
+    dates: list[str]
+    inconsistency_flags: list[str]
+    extraction_confidence: str
+
+
+class CaseScoreRequest(BaseModel):
+    documents: list[dict] = Field(..., description="List of Stage 1 extraction outputs for this case")
+    business_context: str = Field(default="", description="Free-text business type/context, e.g. 'textile wholesaler, seasonal Q4 spike expected'")
+
+
+class CaseScoreResponse(BaseModel):
+    case_id: str
+    algorithmic_score: int
+    deductions: list[dict]
+    gemma_adjustment: int
+    gemma_adjustment_justification: str
+    final_score: int
+    score: int  # duplicate of final_score for backwards compatibility
+    confidence: Literal["high", "moderate", "low"]
+    flagged_reasons: list[str]
+    recommended_action: Literal["approve", "escalate", "request_documents", "human_review"]
+    reasoning_narrative: str
+    signals: dict
+
+
+class ConversationTurn(BaseModel):
+    role: Literal["officer", "gemma"]
+    content: str
+
+
+class ConversationRequest(BaseModel):
+    case_id: str
+    question: str
+    conversation_history: list[ConversationTurn] = []
+
+
+class ConversationResponse(BaseModel):
+    answer: str
+
+
+class CaseStatus(BaseModel):
+    case_id: str
+    status: Literal["pending", "approved", "escalated", "requires_documents"]
+    score: int | None = None
+    updated_at: str

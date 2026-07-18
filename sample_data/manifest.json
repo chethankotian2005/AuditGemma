@@ -1,0 +1,74 @@
+{
+  "cases": [
+    {
+      "case_id": "case_1_clean",
+      "description": "Clean control case. All signals pass.",
+      "business_context": "Textile wholesaler, Bangalore, steady year-round demand.",
+      "expected_signals": [],
+      "documents": [
+        "case_1_clean_invoice.png",
+        "case_1_clean_gst.png",
+        "case_1_clean_kyc.png",
+        "case_1_clean_bank.png"
+      ]
+    },
+    {
+      "case_id": "case_2_mismatch",
+      "description": "Deliberate GSTIN mismatch between invoice and KYC. Also skewed Benford's distribution.",
+      "business_context": "Electronics supplier, Mumbai, high volume.",
+      "expected_signals": [
+        "entity_consistency",
+        "benfords_law"
+      ],
+      "documents": [
+        "case_2_mismatch_invoice.png",
+        "case_2_mismatch_gst.png",
+        "case_2_mismatch_kyc.png",
+        "case_2_mismatch_bank.png"
+      ]
+    },
+    {
+      "case_id": "case_3_velocity",
+      "description": "Burst of near-identical transactions in a short window.",
+      "business_context": "FMCG Distributor, Delhi, daily small restocks.",
+      "expected_signals": [
+        "transaction_velocity"
+      ],
+      "documents": [
+        "case_3_velocity_invoice.png",
+        "case_3_velocity_gst.png",
+        "case_3_velocity_kyc.png",
+        "case_3_velocity_bank.png"
+      ]
+    },
+    {
+      "case_id": "case_4_borderline",
+      "description": "Deliberately borderline case. Mild signal on one check (MAD outlier) meant to make Gemma express genuine moderate uncertainty given the context.",
+      "business_context": "Seasonal Agro-exporter, Kerala, Q4 seasonal equipment buying expected.",
+      "expected_signals": [
+        "mad_outlier"
+      ],
+      "documents": [
+        "case_4_borderline_invoice.png",
+        "case_4_borderline_gst.png",
+        "case_4_borderline_kyc.png",
+        "case_4_borderline_bank.png"
+      ]
+    },
+    {
+      "case_id": "case_5_ambiguous",
+      "description": "Borderline Ambiguous case. Trips only one signal mildly (slightly elevated transaction velocity).",
+      "business_context": "Seasonal retailer, mild transaction uptick expected in run-up to festival season.",
+      "expected_signals": [
+        "transaction_velocity"
+      ],
+      "expected_confidence": "moderate",
+      "documents": [
+        "case_5_ambiguous_invoice.png",
+        "case_5_ambiguous_gst.png",
+        "case_5_ambiguous_kyc.png",
+        "case_5_ambiguous_bank.png"
+      ]
+    }
+  ]
+}

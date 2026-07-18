@@ -6,6 +6,7 @@ import 'theme/app_theme.dart';
 import 'providers/auth_provider.dart';
 import 'providers/case_provider.dart';
 import 'services/notification_service.dart';
+import 'services/api_service.dart';
 
 import 'screens/login_screen.dart';
 import 'screens/sme/sme_home_screen.dart';
@@ -30,6 +31,7 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+        Provider(create: (_) => ApiService()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => CaseProvider()),
       ],

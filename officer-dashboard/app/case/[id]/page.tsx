@@ -41,6 +41,7 @@ export default function CaseDetailPage({ params }: PageProps) {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [actionReason, setActionReason] = useState<string>("");
 
   // Conversation history (for PDF export)
   const [conversationHistory, setConversationHistory] = useState<ConversationTurn[]>([]);
@@ -74,7 +75,7 @@ export default function CaseDetailPage({ params }: PageProps) {
     setConfirmAction(null);
     setActionLoading(status);
     try {
-      await updateCaseStatus(id, status);
+      await updateCaseStatus(id, status, actionReason || undefined);
       setActionSuccess(status);
       // Refresh case data
       await fetchCase();
@@ -251,6 +252,18 @@ export default function CaseDetailPage({ params }: PageProps) {
                   </strong>
                 </span>
               </div>
+              
+              {/* Rejection Reason Display */}
+              {caseDetail.status === "rejected" && caseDetail.rejection_reason && (
+                <div style={{ marginTop: "16px", padding: "16px", background: "var(--danger-muted)", borderRadius: "8px", border: "1px solid #ef444430" }}>
+                  <div style={{ fontWeight: "600", color: "var(--danger)", display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                    <ShieldAlert size={16} /> Rejection Reason
+                  </div>
+                  <p style={{ color: "var(--danger)", fontSize: "14px", lineHeight: "1.5", margin: 0 }}>
+                    {caseDetail.rejection_reason}
+                  </p>
+                </div>
+              )}
 
               {/* Signals Grid */}
               <div className="panel-card">
@@ -288,7 +301,7 @@ export default function CaseDetailPage({ params }: PageProps) {
               className="officer-btn-approve"
               loading={actionLoading}
               success={actionSuccess}
-              onClick={() => setConfirmAction("approved")}
+              onClick={() => { setConfirmAction("approved"); setActionReason(""); }}
             />
             <ActionButton
               label="Escalate"
@@ -297,7 +310,7 @@ export default function CaseDetailPage({ params }: PageProps) {
               className="officer-btn-escalate"
               loading={actionLoading}
               success={actionSuccess}
-              onClick={() => setConfirmAction("escalated")}
+              onClick={() => { setConfirmAction("escalated"); setActionReason(""); }}
             />
             <ActionButton
               label="Request Documents"
@@ -306,7 +319,16 @@ export default function CaseDetailPage({ params }: PageProps) {
               className="officer-btn-request-docs"
               loading={actionLoading}
               success={actionSuccess}
-              onClick={() => setConfirmAction("requires_documents")}
+              onClick={() => { setConfirmAction("requires_documents"); setActionReason(""); }}
+            />
+            <ActionButton
+              label="Reject"
+              status="rejected"
+              icon={<ShieldAlert size={16} />}
+              className="officer-btn-reject"
+              loading={actionLoading}
+              success={actionSuccess}
+              onClick={() => { setConfirmAction("rejected"); setActionReason(""); }}
             />
           </div>
 
@@ -356,7 +378,14 @@ export default function CaseDetailPage({ params }: PageProps) {
               </strong>{" "}
               this case?
             </p>
-            <div className="confirm-actions">
+            <textarea
+              placeholder={confirmAction === "rejected" ? "Rejection reason (required)..." : "Add an optional note..."}
+              value={actionReason}
+              onChange={(e) => setActionReason(e.target.value)}
+              className="action-reason-input"
+              style={{ width: "100%", minHeight: "80px", marginTop: "12px", padding: "8px", borderRadius: "4px", border: "1px solid var(--border-color)", background: "var(--surface-sunken)", color: "var(--text-primary)" }}
+            />
+            <div className="confirm-actions" style={{ marginTop: "16px" }}>
               <button
                 className="confirm-cancel"
                 onClick={() => setConfirmAction(null)}
@@ -364,12 +393,16 @@ export default function CaseDetailPage({ params }: PageProps) {
                 Cancel
               </button>
               <button
+                disabled={confirmAction === "rejected" && !actionReason.trim()}
+                style={{ opacity: (confirmAction === "rejected" && !actionReason.trim()) ? 0.5 : 1, cursor: (confirmAction === "rejected" && !actionReason.trim()) ? "not-allowed" : "pointer" }}
                 className={`confirm-proceed officer-action-btn officer-btn-${
                   confirmAction === "approved"
                     ? "approve"
                     : confirmAction === "escalated"
                       ? "escalate"
-                      : "request-docs"
+                      : confirmAction === "rejected"
+                        ? "reject"
+                        : "request-docs"
                 }`}
                 onClick={() => handleAction(confirmAction)}
               >

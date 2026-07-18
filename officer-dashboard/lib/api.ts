@@ -94,9 +94,11 @@ export async function getAuditLog(id: string): Promise<AuditLogEntry[]> {
 export async function updateCaseStatus(
   id: string,
   status: string,
+  reason?: string
 ): Promise<{ case_id: string; status: string }> {
-  return apiFetch(`/case/${encodeURIComponent(id)}/status?status=${encodeURIComponent(status)}`, {
+  return apiFetch(`/case/${encodeURIComponent(id)}/status`, {
     method: "PATCH",
+    body: JSON.stringify({ status, reason }),
   });
 }
 

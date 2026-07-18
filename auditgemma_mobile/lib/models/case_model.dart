@@ -36,6 +36,7 @@ class CaseDetail {
   final String recommendedAction;
   final String reasoningNarrative;
   final Map<String, dynamic> signals;
+  final String? rejectionReason;
 
   CaseDetail({
     required this.caseId,
@@ -47,6 +48,7 @@ class CaseDetail {
     required this.recommendedAction,
     required this.reasoningNarrative,
     required this.signals,
+    this.rejectionReason,
   });
 
   factory CaseDetail.fromJson(Map<String, dynamic> json) {
@@ -60,6 +62,7 @@ class CaseDetail {
       recommendedAction: json['recommended_action'] as String? ?? 'human_review',
       reasoningNarrative: json['reasoning_narrative'] as String? ?? '',
       signals: Map<String, dynamic>.from(json['signals'] ?? {}),
+      rejectionReason: json['rejection_reason'] as String?,
     );
   }
 
@@ -73,6 +76,7 @@ class CaseDetail {
         'recommended_action': recommendedAction,
         'reasoning_narrative': reasoningNarrative,
         'signals': signals,
+        'rejection_reason': rejectionReason,
       };
 }
 

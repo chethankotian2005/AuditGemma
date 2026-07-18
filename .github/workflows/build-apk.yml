@@ -1,0 +1,41 @@
+name: Build Flutter APK
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Install dependencies
+        working-directory: ./auditgemma_mobile
+        run: flutter pub get
+
+      - name: Build APK
+        working-directory: ./auditgemma_mobile
+        run: flutter build apk --release --dart-define=API_BASE_URL="https://auditgemma-backend-124362139239.us-east4.run.app"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release
+          path: auditgemma_mobile/build/app/outputs/flutter-apk/app-release.apk

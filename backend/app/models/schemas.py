@@ -49,15 +49,21 @@ class ConversationResponse(BaseModel):
 
 class CaseStatus(BaseModel):
     case_id: str
-    status: Literal["pending", "approved", "escalated", "requires_documents"]
+    status: Literal["pending", "approved", "escalated", "requires_documents", "rejected"]
     score: int | None = None
     updated_at: str
+
+
+class CaseStatusUpdateRequest(BaseModel):
+    status: Literal["pending", "approved", "escalated", "requires_documents", "rejected"]
+    reason: str | None = None
 
 
 class CaseDetailResponse(BaseModel):
     case_id: str
     status: str
     updated_at: str
+    rejection_reason: str | None = None
     documents: list[dict]
     algorithmic_score: int
     deductions: list[dict]

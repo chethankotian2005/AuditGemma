@@ -19,7 +19,7 @@ from app.signal_layer import run_signal_layer
 from app.scoring.risk_engine import compute_score
 from app.models.schemas import (
     CaseScoreRequest, CaseScoreResponse, ConversationRequest,
-    ConversationResponse, CaseStatus, CaseDetailResponse
+    ConversationResponse, CaseStatus, CaseStatusUpdateRequest, CaseDetailResponse
 )
 from app.db.firestore_client import (
     save_case, get_case as db_get_case, list_cases as db_list_cases, 
@@ -139,6 +139,7 @@ async def get_case(case_id: str, auth_token: dict = Depends(verify_token)):
         case_id=case_id,
         status=case.get("status", "pending"),
         updated_at=case.get("updated_at", ""),
+        rejection_reason=case.get("rejection_reason"),
         documents=case.get("documents", []),
         algorithmic_score=sr.get("algorithmic_score", 0),
         deductions=sr.get("deductions", []),
@@ -155,32 +156,36 @@ async def get_case(case_id: str, auth_token: dict = Depends(verify_token)):
 
 
 @router.patch("/case/{case_id}/status")
-async def update_case_status(case_id: str, status: str, auth_token: dict = Depends(verify_token)):
-    """Officer swipe action: approve / escalate / request_documents."""
+async def update_case_status(case_id: str, request: CaseStatusUpdateRequest, auth_token: dict = Depends(verify_token)):
+    """Officer swipe action: approve / escalate / request_documents / reject."""
     case = db_get_case(case_id)
     if not case:
         raise HTTPException(status_code=404, detail="case_id not found")
-    valid = {"pending", "approved", "escalated", "requires_documents"}
-    if status not in valid:
-        raise HTTPException(status_code=400, detail=f"status must be one of {valid}")
+        
+    if request.status == "rejected" and not request.reason:
+        raise HTTPException(status_code=400, detail="Rejection reason is required.")
         
     updated_at = datetime.now(timezone.utc).isoformat()
     previous_status = case.get("status", "pending")
     officer_uid = auth_token.get("uid", "unknown")
     
     # Audit trail
-    if previous_status != status:
+    if previous_status != request.status:
+        action_text = f"Changed status to {request.status}"
+        if request.reason:
+            action_text += f" (Reason: {request.reason})"
+            
         append_audit_log(
             case_id=case_id,
             officer_uid=officer_uid,
-            action=f"Changed status to {status}",
+            action=action_text,
             previous_status=previous_status,
-            new_status=status,
+            new_status=request.status,
             timestamp=updated_at
         )
 
-    db_update_case_status(case_id, status, updated_at)
-    return {"case_id": case_id, "status": status}
+    db_update_case_status(case_id, request.status, updated_at, request.reason)
+    return {"case_id": case_id, "status": request.status}
 
 @router.get("/case/{case_id}/audit_log")
 async def get_case_audit_log(case_id: str, auth_token: dict = Depends(verify_token)):

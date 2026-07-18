@@ -1226,6 +1226,16 @@ body {
   border-color: var(--info);
 }
 
+.officer-btn-reject {
+  background: var(--danger-muted);
+  color: var(--danger);
+  border-color: #ef444430;
+}
+.officer-btn-reject:hover:not(:disabled) {
+  background: #ef444430;
+  border-color: var(--danger);
+}
+
 /* Report export button */
 .report-export-btn {
   padding: 10px 20px;

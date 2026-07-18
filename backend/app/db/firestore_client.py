@@ -86,17 +86,27 @@ def list_cases() -> list:
             })
     return cases
 
-def update_case_status(case_id: str, status: str, updated_at: str):
+def update_case_status(case_id: str, status: str, updated_at: str, reason: str | None = None):
     """Update the status of an existing case."""
     db = get_db()
+    update_data = {
+        "status": status,
+        "updated_at": updated_at
+    }
+    if reason:
+        update_data["rejection_reason"] = reason
+    else:
+        update_data["rejection_reason"] = firestore.DELETE_FIELD
+
     if db:
-        db.collection("cases").document(case_id).update({
-            "status": status,
-            "updated_at": updated_at
-        })
+        db.collection("cases").document(case_id).update(update_data)
     elif case_id in _LOCAL_STORE:
         _LOCAL_STORE[case_id]["status"] = status
         _LOCAL_STORE[case_id]["updated_at"] = updated_at
+        if reason:
+            _LOCAL_STORE[case_id]["rejection_reason"] = reason
+        elif "rejection_reason" in _LOCAL_STORE[case_id]:
+            del _LOCAL_STORE[case_id]["rejection_reason"]
 
 def append_audit_log(case_id: str, officer_uid: str, action: str, previous_status: str, new_status: str, timestamp: str):
     """Append a log entry to the audit_log collection."""

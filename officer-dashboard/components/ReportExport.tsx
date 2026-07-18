@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { FileDown, Loader2 } from "lucide-react";
-import type { CaseScoreResponse, ConversationTurn, AuditLogEntry } from "@/lib/types";
+import type { CaseDetail, ConversationTurn, AuditLogEntry } from "@/lib/types";
 
 interface ReportExportProps {
-  caseData: CaseScoreResponse;
+  caseData: CaseDetail;
   conversationHistory: ConversationTurn[];
   auditLog?: AuditLogEntry[];
 }
@@ -240,6 +240,18 @@ export default function ReportExport({
                 </Text>
               </View>
             </View>
+
+            {/* Rejection Reason (If applicable) */}
+            {caseData.status === "rejected" && caseData.rejection_reason && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Rejection Reason</Text>
+                <View style={[styles.row, { backgroundColor: "#fef2f2", padding: 8, borderRadius: 4 }]}>
+                  <Text style={[styles.value, { color: "#991b1b" }]}>
+                    {caseData.rejection_reason}
+                  </Text>
+                </View>
+              </View>
+            )}
 
             {/* Flagged Reasons */}
             {caseData.flagged_reasons.length > 0 && (

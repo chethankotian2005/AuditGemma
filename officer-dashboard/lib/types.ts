@@ -65,6 +65,7 @@ export interface CaseDetail {
     | "human_review";
   reasoning_narrative: string;
   signals: Signals;
+  rejection_reason?: string;
 }
 
 /** Full response from POST /score — contains everything needed for the detail page */
@@ -90,6 +91,7 @@ export interface CaseScoreResponse {
     | "human_review";
   reasoning_narrative: string;
   signals: Signals;
+  rejection_reason?: string;
 }
 
 /** An entry in the officer audit trail */
@@ -125,7 +127,8 @@ export type CaseStatusValue =
   | "pending"
   | "approved"
   | "escalated"
-  | "requires_documents";
+  | "requires_documents"
+  | "rejected";
 
 /** API error shape */
 export interface ApiError {

@@ -17,6 +17,7 @@ from app.gemma.reasoning_agent import run_stage3
 from app.gemma.conversational_agent import ask as gemma_ask
 from app.signal_layer import run_signal_layer
 from app.scoring.risk_engine import compute_score
+from app.scoring.mock_cibil import get_mock_cibil
 from app.models.schemas import (
     CaseScoreRequest, CaseScoreResponse, ConversationRequest,
     ConversationResponse, CaseStatus, CaseStatusUpdateRequest, CaseDetailResponse
@@ -78,6 +79,11 @@ async def score(request: CaseScoreRequest, auth_token: dict = Depends(verify_tok
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Gemma reasoning failed: {e}")
 
+    # Mock CIBIL bureau lookup (hackathon demo — display-only, not folded into risk score)
+    # TODO: decide if CIBIL score should become a weighted input to risk_engine.py's
+    # scoring formula, or remain informational only — not decided yet, currently display-only.
+    cibil_result = get_mock_cibil(request.pan_number)
+
     case_id = str(uuid.uuid4())
     case_record = {
         "documents": request.documents,
@@ -85,6 +91,10 @@ async def score(request: CaseScoreRequest, auth_token: dict = Depends(verify_tok
         "score_result": stage3_result,
         "status": "pending",
         "updated_at": datetime.now(timezone.utc).isoformat(),
+        "pan_number": request.pan_number,
+        "cibil_score": cibil_result["score"],
+        "cibil_band": cibil_result["band"],
+        "is_mock_data": cibil_result.get("is_mock_data", True),
     }
     
     save_case(case_id, case_record)
@@ -103,6 +113,9 @@ async def score(request: CaseScoreRequest, auth_token: dict = Depends(verify_tok
         recommended_action=stage3_result["recommended_action"],
         reasoning_narrative=stage3_result["reasoning_narrative"],
         signals=signal_result["signals"],
+        cibil_score=cibil_result["score"],
+        cibil_band=cibil_result["band"],
+        is_mock_data=cibil_result.get("is_mock_data", True),
     )
 
 
@@ -152,6 +165,10 @@ async def get_case(case_id: str, auth_token: dict = Depends(verify_token)):
         recommended_action=sr.get("recommended_action", "human_review"),
         reasoning_narrative=sr.get("reasoning_narrative", ""),
         signals=case.get("signals", {}),
+        pan_number=case.get("pan_number", ""),
+        cibil_score=case.get("cibil_score"),
+        cibil_band=case.get("cibil_band", ""),
+        is_mock_data=case.get("is_mock_data", True),
     )
 
 

@@ -15,6 +15,7 @@ class ExtractionResponse(BaseModel):
 class CaseScoreRequest(BaseModel):
     documents: list[dict] = Field(..., description="List of Stage 1 extraction outputs for this case")
     business_context: str = Field(default="", description="Free-text business type/context, e.g. 'textile wholesaler, seasonal Q4 spike expected'")
+    pan_number: str = Field(default="", description="Applicant's self-declared PAN for mock CIBIL bureau lookup (separate from any PAN extracted from documents)")
 
 
 class CaseScoreResponse(BaseModel):
@@ -30,6 +31,10 @@ class CaseScoreResponse(BaseModel):
     recommended_action: Literal["approve", "escalate", "request_documents", "human_review"]
     reasoning_narrative: str
     signals: dict
+    # Mock CIBIL bureau data (hackathon demo only — not a real bureau integration)
+    cibil_score: int | None = None
+    cibil_band: str = ""
+    is_mock_data: bool = True
 
 
 class ConversationTurn(BaseModel):
@@ -76,3 +81,8 @@ class CaseDetailResponse(BaseModel):
     recommended_action: Literal["approve", "escalate", "request_documents", "human_review"]
     reasoning_narrative: str
     signals: dict
+    # Mock CIBIL bureau data (hackathon demo only — not a real bureau integration)
+    pan_number: str = ""
+    cibil_score: int | None = None
+    cibil_band: str = ""
+    is_mock_data: bool = True

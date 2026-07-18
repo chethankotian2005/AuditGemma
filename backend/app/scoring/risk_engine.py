@@ -8,6 +8,11 @@ Weights and thresholds are fixed constants:
 - BASE_SCORE = 100 (lowest risk)
 - SEVERITY_WEIGHT: Base penalty multiplier per severity level.
 - CHECK_WEIGHT: Importance multiplier per specific check.
+
+TODO: decide if CIBIL score should become a weighted input to this scoring formula,
+or remain informational/display-only — not decided yet, currently display-only.
+The mock CIBIL lookup lives in app/scoring/mock_cibil.py and is shown on the officer
+dashboard but does NOT affect the algorithmic_score computed here.
 """
 from typing import Dict, Any, List
 

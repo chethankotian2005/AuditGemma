@@ -256,6 +256,76 @@ export default function CaseDetailPage({ params }: PageProps) {
                 </div>
               </div>
 
+              {/* Credit Bureau (Mock CIBIL — hackathon demo only) */}
+              <div className="panel-card">
+                <div className="panel-card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span>Credit Bureau</span>
+                  <span style={{
+                    fontSize: "10px",
+                    fontWeight: "700",
+                    color: "#f59e0b",
+                    background: "#f59e0b18",
+                    border: "1px solid #f59e0b40",
+                    padding: "2px 8px",
+                    borderRadius: "4px",
+                    letterSpacing: "0.5px",
+                    textTransform: "uppercase",
+                  }}>⚠ Demo Data</span>
+                </div>
+                <div style={{ marginTop: "12px", fontSize: "14px" }}>
+                  {caseDetail.pan_number ? (
+                    <>
+                      <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid var(--border-color)" }}>
+                        <span style={{ color: "var(--text-secondary)" }}>PAN</span>
+                        <span style={{ fontFamily: "var(--font-mono)", fontWeight: "600", color: "var(--text-primary)", letterSpacing: "1px" }}>
+                          {caseDetail.pan_number.slice(0, 3)}••••{caseDetail.pan_number.slice(-2)}
+                        </span>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid var(--border-color)" }}>
+                        <span style={{ color: "var(--text-secondary)" }}>CIBIL Score</span>
+                        <span style={{
+                          fontFamily: "var(--font-mono)",
+                          fontWeight: "700",
+                          fontSize: "18px",
+                          color: caseDetail.cibil_score != null
+                            ? caseDetail.cibil_score >= 750 ? "#22c55e"
+                            : caseDetail.cibil_score >= 650 ? "#eab308"
+                            : caseDetail.cibil_score >= 500 ? "#f97316"
+                            : "#ef4444"
+                            : "var(--text-muted)",
+                        }}>
+                          {caseDetail.cibil_score != null ? caseDetail.cibil_score : "—"}
+                        </span>
+                      </div>
+                      {caseDetail.cibil_score != null && (
+                        <div style={{ marginTop: "8px", height: "6px", borderRadius: "3px", background: "#ffffff10", overflow: "hidden" }}>
+                          <div style={{
+                            height: "100%",
+                            borderRadius: "3px",
+                            width: `${Math.min(100, Math.max(5, ((caseDetail.cibil_score - 300) / 600) * 100))}%`,
+                            background: caseDetail.cibil_score >= 750 ? "linear-gradient(90deg, #22c55e, #16a34a)"
+                              : caseDetail.cibil_score >= 650 ? "linear-gradient(90deg, #eab308, #ca8a04)"
+                              : caseDetail.cibil_score >= 500 ? "linear-gradient(90deg, #f97316, #ea580c)"
+                              : "linear-gradient(90deg, #ef4444, #dc2626)",
+                            transition: "width 0.8s ease-out",
+                          }} />
+                        </div>
+                      )}
+                      <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", marginTop: "4px" }}>
+                        <span style={{ color: "var(--text-secondary)" }}>Band</span>
+                        <span style={{ fontWeight: "600", color: "var(--text-primary)" }}>
+                          {caseDetail.cibil_band || "—"}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ textAlign: "center", padding: "12px 0", color: "var(--text-muted)", fontSize: "13px" }}>
+                      No PAN submitted with this application
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Score Breakdown (Deterministic logic + Gemma Adjustment) */}
               <div className="panel-card">
                 <div className="panel-card-header">Score Breakdown</div>

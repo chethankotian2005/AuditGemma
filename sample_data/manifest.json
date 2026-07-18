@@ -4,6 +4,7 @@
       "case_id": "case_1_clean",
       "description": "Clean control case. All signals pass.",
       "business_context": "Textile wholesaler, Bangalore, steady year-round demand.",
+      "pan_number": "ABCPK1234L",
       "expected_signals": [],
       "documents": [
         "case_1_clean_invoice.png",
@@ -16,6 +17,7 @@
       "case_id": "case_2_mismatch",
       "description": "Deliberate GSTIN mismatch between invoice and KYC. Also skewed Benford's distribution.",
       "business_context": "Electronics supplier, Mumbai, high volume.",
+      "pan_number": "DGHPM5678R",
       "expected_signals": [
         "entity_consistency",
         "benfords_law"
@@ -31,6 +33,7 @@
       "case_id": "case_3_velocity",
       "description": "Burst of near-identical transactions in a short window.",
       "business_context": "FMCG Distributor, Delhi, daily small restocks.",
+      "pan_number": "JKLPV9012N",
       "expected_signals": [
         "transaction_velocity"
       ],
@@ -45,6 +48,7 @@
       "case_id": "case_4_borderline",
       "description": "Deliberately borderline case. Mild signal on one check (MAD outlier) meant to make Gemma express genuine moderate uncertainty given the context.",
       "business_context": "Seasonal Agro-exporter, Kerala, Q4 seasonal equipment buying expected.",
+      "pan_number": "XYZPD3456Q",
       "expected_signals": [
         "mad_outlier"
       ],
@@ -59,6 +63,7 @@
       "case_id": "case_5_ambiguous",
       "description": "Borderline Ambiguous case. Trips only one signal mildly (slightly elevated transaction velocity).",
       "business_context": "Seasonal retailer, mild transaction uptick expected in run-up to festival season.",
+      "pan_number": "",
       "expected_signals": [
         "transaction_velocity"
       ],

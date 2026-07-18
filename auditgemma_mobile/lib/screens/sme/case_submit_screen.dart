@@ -16,10 +16,27 @@ class CaseSubmitScreen extends StatefulWidget {
 
 class _CaseSubmitScreenState extends State<CaseSubmitScreen> {
   final _contextController = TextEditingController();
+  final _panController = TextEditingController();
   bool _isSubmitting = false;
+  String? _panError;
+
+  /// Validate PAN format: 5 letters + 4 digits + 1 letter (standard Indian PAN)
+  bool _validatePan(String pan) {
+    if (pan.isEmpty) return true; // PAN is optional
+    final panRegex = RegExp(r'^[A-Z]{5}[0-9]{4}[A-Z]{1}$');
+    return panRegex.hasMatch(pan.toUpperCase());
+  }
 
   Future<void> _submit() async {
-    setState(() => _isSubmitting = true);
+    final panText = _panController.text.trim();
+    if (panText.isNotEmpty && !_validatePan(panText)) {
+      setState(() => _panError = 'Invalid PAN format (e.g. ABCPK1234L)');
+      return;
+    }
+    setState(() {
+      _panError = null;
+      _isSubmitting = true;
+    });
 
     // Convert captured documents to extraction JSON for scoring
     final docs = widget.documents.map<Map<String, dynamic>>((doc) {
@@ -30,6 +47,7 @@ class _CaseSubmitScreenState extends State<CaseSubmitScreen> {
     final result = await context.read<CaseProvider>().submitCase(
           docs,
           _contextController.text.trim(),
+          panNumber: panText.toUpperCase(),
         );
 
     if (!mounted) return;
@@ -60,6 +78,7 @@ class _CaseSubmitScreenState extends State<CaseSubmitScreen> {
   @override
   void dispose() {
     _contextController.dispose();
+    _panController.dispose();
     super.dispose();
   }
 
@@ -132,6 +151,56 @@ class _CaseSubmitScreenState extends State<CaseSubmitScreen> {
                     ),
                   );
                 }),
+                const SizedBox(height: 24),
+                // PAN Number
+                const Text(
+                  'PAN NUMBER',
+                  style: TextStyle(
+                    color: AppTheme.textMuted,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _panController,
+                  textCapitalization: TextCapitalization.characters,
+                  maxLength: 10,
+                  decoration: InputDecoration(
+                    hintText: 'e.g. ABCPK1234L',
+                    counterText: '',
+                    errorText: _panError,
+                    suffixIcon: _panController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 16),
+                            onPressed: () {
+                              _panController.clear();
+                              setState(() => _panError = null);
+                            },
+                          )
+                        : null,
+                  ),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppTheme.textPrimary,
+                    fontFamily: 'monospace',
+                    letterSpacing: 2,
+                  ),
+                  onChanged: (val) {
+                    if (_panError != null) {
+                      setState(() => _panError = null);
+                    }
+                  },
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Your PAN is used for credit bureau lookup (demo only — not a real bureau check).',
+                  style: TextStyle(
+                    color: AppTheme.textMuted,
+                    fontSize: 12,
+                  ),
+                ),
                 const SizedBox(height: 24),
                 // Business context
                 const Text(

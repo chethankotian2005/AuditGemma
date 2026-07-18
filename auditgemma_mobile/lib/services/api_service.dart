@@ -48,17 +48,19 @@ class ApiService {
   }
 
   // ── POST /score ───────────────────────────────────────────────
-  /// Submit documents + business context for Stage 2+3 scoring.
+  /// Submit documents + business context + PAN for Stage 2+3 scoring.
   Future<CaseScoreResponse> scoreCase(
     List<Map<String, dynamic>> documents,
-    String businessContext,
-  ) async {
+    String businessContext, {
+    String panNumber = "",
+  }) async {
     final response = await http.post(
       Uri.parse('$baseUrl/score'),
       headers: await _getHeaders(),
       body: jsonEncode({
         'documents': documents,
         'business_context': businessContext,
+        'pan_number': panNumber,
       }),
     );
     _checkResponse(response);

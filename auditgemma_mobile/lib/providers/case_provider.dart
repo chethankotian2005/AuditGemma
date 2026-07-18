@@ -47,14 +47,15 @@ class CaseProvider extends ChangeNotifier {
   /// Submit a case for scoring (SME flow).
   Future<CaseScoreResponse?> submitCase(
     List<Map<String, dynamic>> documents,
-    String businessContext,
-  ) async {
+    String businessContext, {
+    String panNumber = "",
+  }) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final result = await _api.scoreCase(documents, businessContext);
+      final result = await _api.scoreCase(documents, businessContext, panNumber: panNumber);
       _scoreCache[result.caseId] = result;
       await _cache.cacheCaseScore(result);
 

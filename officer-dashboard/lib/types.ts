@@ -66,6 +66,11 @@ export interface CaseDetail {
   reasoning_narrative: string;
   signals: Signals;
   rejection_reason?: string;
+  // Mock CIBIL bureau data (hackathon demo only)
+  pan_number?: string;
+  cibil_score?: number | null;
+  cibil_band?: string;
+  is_mock_data?: boolean;
 }
 
 /** Full response from POST /score — contains everything needed for the detail page */
@@ -92,6 +97,11 @@ export interface CaseScoreResponse {
   reasoning_narrative: string;
   signals: Signals;
   rejection_reason?: string;
+  // Mock CIBIL bureau data (hackathon demo only)
+  pan_number?: string;
+  cibil_score?: number | null;
+  cibil_band?: string;
+  is_mock_data?: boolean;
 }
 
 /** An entry in the officer audit trail */

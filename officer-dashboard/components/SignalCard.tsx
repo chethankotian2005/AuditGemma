@@ -68,49 +68,43 @@ function deriveStatus(
   data: any,
 ): "ok" | "warning" | "alert" {
   if (!data) return "warning";
+  if (data.applicable === false) return "ok";
 
-  switch (key) {
-    case "benfords_law":
-      if (data.conformity === "acceptable") return "ok";
-      if (data.conformity === "suspicious") return "warning";
-      return "alert";
-    case "transaction_velocity":
-      return data.spike_detected ? "alert" : "ok";
-    case "threshold_anomaly":
-      return data.has_anomalies ? "alert" : "ok";
-    case "entity_consistency":
-      return data.consistent ? "ok" : "alert";
-    default:
-      return "warning";
+  if (data.flagged === true) {
+    if (data.severity === "high") return "alert";
+    return "warning";
   }
+
+  return "ok";
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function renderSignalData(key: string, data: any) {
   if (!data) return <span className="signal-no-data">No data</span>;
+  if (data.applicable === false) {
+    return <div className="signal-no-data" style={{ padding: "12px 0", color: "var(--text-muted)", fontSize: "13px" }}>Not Applicable: {data.reason || "Not enough data to run check"}</div>;
+  }
 
   switch (key) {
     case "benfords_law":
       return (
         <div className="signal-metrics">
           <div className="signal-metric">
-            <span className="signal-metric-label">Conformity</span>
-            <span className="signal-metric-value">{data.conformity ?? "—"}</span>
+            <span className="signal-metric-label">Sample Size</span>
+            <span className="signal-metric-value">{data.sample_size ?? "—"}</span>
           </div>
           <div className="signal-metric">
             <span className="signal-metric-label">χ²</span>
             <span className="signal-metric-value">
-              {typeof data.chi_squared === "number"
-                ? data.chi_squared.toFixed(3)
-                : "—"}
+              {typeof data.chi_square === "number"
+                ? data.chi_square.toFixed(3)
+                : data.chi_square ?? "—"}
             </span>
           </div>
           <div className="signal-metric">
-            <span className="signal-metric-label">p-value</span>
+            <span className="signal-metric-label">Status</span>
             <span className="signal-metric-value">
-              {typeof data.p_value === "number"
-                ? data.p_value.toFixed(4)
-                : "—"}
+              {data.flagged ? "✗ Non-conforming" : "✓ Acceptable"}
             </span>
           </div>
         </div>
@@ -120,27 +114,23 @@ function renderSignalData(key: string, data: any) {
       return (
         <div className="signal-metrics">
           <div className="signal-metric">
-            <span className="signal-metric-label">Rate/day</span>
+            <span className="signal-metric-label">Max in Window</span>
             <span className="signal-metric-value">
-              {typeof data.rate_per_day === "number"
-                ? data.rate_per_day.toFixed(1)
-                : "—"}
+              {data.max_transactions_in_window ?? "—"}
             </span>
           </div>
           <div className="signal-metric">
             <span className="signal-metric-label">Spike</span>
             <span className="signal-metric-value">
-              {data.spike_detected ? "⚠ Detected" : "None"}
+              {data.flagged ? "⚠ Detected" : "None"}
             </span>
           </div>
-          {data.spike_ratio && (
-            <div className="signal-metric">
-              <span className="signal-metric-label">Spike ratio</span>
-              <span className="signal-metric-value">
-                {data.spike_ratio.toFixed(2)}×
-              </span>
-            </div>
-          )}
+          <div className="signal-metric">
+            <span className="signal-metric-label">Total Txns</span>
+            <span className="signal-metric-value">
+              {data.total_transactions ?? "—"}
+            </span>
+          </div>
         </div>
       );
 
@@ -166,7 +156,7 @@ function renderSignalData(key: string, data: any) {
           <div className="signal-metric">
             <span className="signal-metric-label">Outliers</span>
             <span className="signal-metric-value">
-              {Array.isArray(data.outliers) ? data.outliers.length : "0"}
+              {data.outlier_count ?? "0"}
             </span>
           </div>
         </div>
@@ -178,14 +168,16 @@ function renderSignalData(key: string, data: any) {
           <div className="signal-metric">
             <span className="signal-metric-label">Consistent</span>
             <span className="signal-metric-value">
-              {data.consistent ? "✓ Yes" : "✗ No"}
+              {!data.flagged ? "✓ Yes" : "✗ No"}
             </span>
           </div>
           {Array.isArray(data.mismatches) && data.mismatches.length > 0 && (
             <div className="signal-metric signal-metric-wide">
               <span className="signal-metric-label">Mismatches</span>
-              <span className="signal-metric-value signal-mismatches">
-                {data.mismatches.join(", ")}
+              <span className="signal-metric-value signal-mismatches" style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                {data.mismatches.map((m: any) => 
+                  typeof m === "string" ? m : `${m.field} (${m.document_a} vs ${m.document_b})`
+                ).join("\n")}
               </span>
             </div>
           )}

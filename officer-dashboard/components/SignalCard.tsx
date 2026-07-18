@@ -25,7 +25,7 @@ const signalMeta: Record<
     icon: <TrendingUp size={18} />,
     description: "Transaction rate and spike detection",
   },
-  threshold_zscore: {
+  threshold_anomaly: {
     label: "Threshold Anomaly",
     icon: <Activity size={18} />,
     description: "Median/MAD robust outlier detection",
@@ -76,7 +76,7 @@ function deriveStatus(
       return "alert";
     case "transaction_velocity":
       return data.spike_detected ? "alert" : "ok";
-    case "threshold_zscore":
+    case "threshold_anomaly":
       return data.has_anomalies ? "alert" : "ok";
     case "entity_consistency":
       return data.consistent ? "ok" : "alert";
@@ -144,7 +144,7 @@ function renderSignalData(key: string, data: any) {
         </div>
       );
 
-    case "threshold_zscore":
+    case "threshold_anomaly":
       return (
         <div className="signal-metrics">
           <div className="signal-metric">

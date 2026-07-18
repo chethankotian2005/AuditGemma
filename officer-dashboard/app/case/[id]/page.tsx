@@ -153,16 +153,76 @@ export default function CaseDetailPage({ params }: PageProps) {
                 </h3>
                 <span>Uploaded files</span>
               </div>
-              <div className="doc-placeholder">
-                <FileImage size={48} className="doc-placeholder-icon" />
-                <p className="doc-placeholder-title">
-                  Document Viewer
-                </p>
-                <p className="doc-placeholder-hint">
-                  Uploaded invoices, GST filings, bank statements, and KYC
-                  documents will render here when document serving is enabled.
-                </p>
-              </div>
+              {caseDetail.documents && caseDetail.documents.length > 0 ? (
+                <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "16px", overflowY: "auto", flex: 1 }}>
+                  {caseDetail.documents.map((doc, idx) => (
+                    <div key={idx} style={{ background: "var(--surface-sunken)", padding: "16px", borderRadius: "8px", border: "1px solid var(--border-color)" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px", borderBottom: "1px solid var(--border-color)", paddingBottom: "8px" }}>
+                        <FileText size={18} color="var(--accent)" />
+                        <h4 style={{ margin: 0, color: "var(--text-primary)" }}>{doc.document_type || `Document ${idx + 1}`}</h4>
+                        {doc.extraction_confidence && (
+                          <span style={{ marginLeft: "auto", fontSize: "11px", padding: "2px 6px", background: "var(--accent-muted)", color: "var(--accent)", borderRadius: "4px" }}>
+                            {String(doc.extraction_confidence).toUpperCase()} CONFIDENCE
+                          </span>
+                        )}
+                      </div>
+                      
+                      {doc.amounts && doc.amounts.length > 0 && (
+                        <div style={{ marginBottom: "8px" }}>
+                          <span style={{ fontSize: "12px", color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>Extracted Amounts</span>
+                          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                            {doc.amounts.map((amt: number, i: number) => (
+                              <span key={i} style={{ fontSize: "13px", padding: "2px 8px", background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "12px", color: "var(--text-secondary)" }}>
+                                ₹{amt.toLocaleString("en-IN")}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {doc.extracted_entities && Object.keys(doc.extracted_entities).length > 0 && (
+                        <div style={{ marginBottom: "8px", marginTop: "12px" }}>
+                          <span style={{ fontSize: "12px", color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>Key Entities</span>
+                          <table style={{ width: "100%", fontSize: "13px", borderCollapse: "collapse" }}>
+                            <tbody>
+                              {Object.entries(doc.extracted_entities).map(([k, v]) => (
+                                <tr key={k} style={{ borderBottom: "1px solid #ffffff10" }}>
+                                  <td style={{ padding: "4px 0", color: "var(--text-secondary)", width: "40%" }}>{k.replace(/_/g, " ")}</td>
+                                  <td style={{ padding: "4px 0", color: "var(--text-primary)", fontWeight: "500", wordBreak: "break-all" }}>{String(v)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                      
+                      {doc.inconsistency_flags && doc.inconsistency_flags.length > 0 && (
+                        <div style={{ marginTop: "12px", padding: "8px", background: "var(--danger-muted)", borderRadius: "6px", border: "1px solid #ef444430" }}>
+                          <span style={{ fontSize: "12px", color: "var(--danger)", display: "flex", alignItems: "center", gap: "4px", fontWeight: "600" }}>
+                            <AlertTriangle size={14} /> Flags
+                          </span>
+                          <ul style={{ margin: "4px 0 0 0", paddingLeft: "20px", color: "var(--danger)", fontSize: "12px" }}>
+                            {doc.inconsistency_flags.map((flag: string, i: number) => (
+                              <li key={i}>{flag}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="doc-placeholder">
+                  <FileImage size={48} className="doc-placeholder-icon" />
+                  <p className="doc-placeholder-title">
+                    Document Viewer
+                  </p>
+                  <p className="doc-placeholder-hint">
+                    Uploaded invoices, GST filings, bank statements, and KYC
+                    documents will render here when document serving is enabled.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Right — Reasoning Transparency Panel */}

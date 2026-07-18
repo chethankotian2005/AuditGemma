@@ -19,7 +19,7 @@ from app.signal_layer import run_signal_layer
 from app.scoring.risk_engine import compute_score
 from app.models.schemas import (
     CaseScoreRequest, CaseScoreResponse, ConversationRequest,
-    ConversationResponse, CaseStatus,
+    ConversationResponse, CaseStatus, CaseDetailResponse
 )
 from app.db.firestore_client import (
     save_case, get_case as db_get_case, list_cases as db_list_cases, 
@@ -128,16 +128,29 @@ async def converse(request: ConversationRequest, auth_token: dict = Depends(veri
     return ConversationResponse(answer=answer)
 
 
-@router.get("/case/{case_id}", response_model=CaseStatus)
+@router.get("/case/{case_id}", response_model=CaseDetailResponse)
 async def get_case(case_id: str, auth_token: dict = Depends(verify_token)):
     case = db_get_case(case_id)
     if not case:
         raise HTTPException(status_code=404, detail="case_id not found")
-    return CaseStatus(
+    
+    sr = case.get("score_result", {})
+    return CaseDetailResponse(
         case_id=case_id,
         status=case.get("status", "pending"),
-        score=case.get("score_result", {}).get("score", 0),
         updated_at=case.get("updated_at", ""),
+        documents=case.get("documents", []),
+        algorithmic_score=sr.get("algorithmic_score", 0),
+        deductions=sr.get("deductions", []),
+        gemma_adjustment=sr.get("gemma_adjustment", 0),
+        gemma_adjustment_justification=sr.get("gemma_adjustment_justification", ""),
+        final_score=sr.get("final_score", 0),
+        score=sr.get("score", 0),
+        confidence=sr.get("confidence", "low"),
+        flagged_reasons=sr.get("flagged_reasons", []),
+        recommended_action=sr.get("recommended_action", "human_review"),
+        reasoning_narrative=sr.get("reasoning_narrative", ""),
+        signals=case.get("signals", {}),
     )
 
 

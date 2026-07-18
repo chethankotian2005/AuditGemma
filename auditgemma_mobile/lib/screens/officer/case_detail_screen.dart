@@ -7,6 +7,7 @@ import '../../widgets/score_gradient.dart';
 import '../../widgets/confidence_badge.dart';
 import '../../widgets/status_badge.dart';
 import '../../widgets/chat_bottom_sheet.dart';
+import '../../services/api_service.dart';
 
 /// Full case detail screen (tapped from triage card).
 class CaseDetailScreen extends StatefulWidget {
@@ -19,7 +20,7 @@ class CaseDetailScreen extends StatefulWidget {
 }
 
 class _CaseDetailScreenState extends State<CaseDetailScreen> {
-  CaseScoreResponse? _scoreResponse;
+  CaseDetail? _caseDetail;
   bool _isLoading = true;
 
   @override
@@ -29,35 +30,30 @@ class _CaseDetailScreenState extends State<CaseDetailScreen> {
   }
 
   Future<void> _loadData() async {
-    // In a real app with the full API, we would fetch GET /case/{id}
-    // and if we need the full score, maybe a dedicated endpoint or it's
-    // included. For this hackathon demo, we'll try to load from cache
-    // (assuming SME scored it locally, or it was pushed with full data),
-    // or we just show a mock based on the ID to demonstrate the UI.
-    
-    final provider = context.read<CaseProvider>();
-    final cached = provider.getCachedScore(widget.caseId);
-    
-    if (cached != null) {
-      _scoreResponse = cached;
-    } else {
-      // Mock for demo if no cache
-      await Future.delayed(const Duration(milliseconds: 600));
-      _scoreResponse = CaseScoreResponse(
-        caseId: widget.caseId,
-        score: 82,
-        confidence: 'high',
-        flaggedReasons: [
-          'Unusual transaction velocity in Q4',
-          'Entity mismatch across GST/Bank',
-        ],
-        recommendedAction: 'Escalate for manual review of Q4 invoices',
-        reasoningNarrative: 'Step 1: Extracted... Step 2: Analyzed...',
-        signals: {
-          'benfords_law': {'status': 'flagged', 'value': '0.12 MAD'},
-          'transaction_velocity': {'status': 'flagged', 'value': '+300% YoY'},
-        },
-      );
+    try {
+      final provider = context.read<CaseProvider>();
+      final cached = provider.getCachedScore(widget.caseId);
+      
+      if (cached != null) {
+        // Map cached CaseScoreResponse to CaseDetail
+        _caseDetail = CaseDetail(
+          caseId: cached.caseId,
+          status: 'pending', // default if missing
+          score: cached.score,
+          updatedAt: '',
+          confidence: cached.confidence,
+          flaggedReasons: cached.flaggedReasons,
+          recommendedAction: cached.recommendedAction,
+          reasoningNarrative: cached.reasoningNarrative,
+          signals: cached.signals,
+        );
+      } else {
+        // Fetch from the real API
+        final apiService = context.read<ApiService>();
+        _caseDetail = await apiService.getCase(widget.caseId);
+      }
+    } catch (e) {
+      debugPrint('Error loading case detail: $e');
     }
     
     if (mounted) setState(() => _isLoading = false);
@@ -105,14 +101,14 @@ class _CaseDetailScreenState extends State<CaseDetailScreen> {
                   // Score bar
                   Center(
                     child: ScoreGradientWidget(
-                      score: _scoreResponse!.score,
+                      score: _caseDetail!.score ?? 0,
                       variant: 'bar',
                     ),
                   ),
                   const SizedBox(height: 24),
                   
                   // Confidence
-                  Center(child: ConfidenceBadge(confidence: _scoreResponse!.confidence)),
+                  Center(child: ConfidenceBadge(confidence: _caseDetail!.confidence)),
                   const SizedBox(height: 32),
                   
                   // Recommended Action
@@ -138,7 +134,7 @@ class _CaseDetailScreenState extends State<CaseDetailScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          _scoreResponse!.recommendedAction,
+                          _caseDetail!.recommendedAction,
                           style: const TextStyle(
                             color: AppTheme.textPrimary,
                             fontSize: 14,
@@ -161,7 +157,7 @@ class _CaseDetailScreenState extends State<CaseDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  ..._scoreResponse!.flaggedReasons.map((r) => Padding(
+                  ..._caseDetail!.flaggedReasons.map((r) => Padding(
                     padding: const EdgeInsets.only(bottom: 8),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,7 +193,7 @@ class _CaseDetailScreenState extends State<CaseDetailScreen> {
                     mainAxisSpacing: 8,
                     crossAxisSpacing: 8,
                     childAspectRatio: 1.5,
-                    children: _scoreResponse!.signals.entries.map((e) {
+                    children: _caseDetail!.signals.entries.map((e) {
                       final data = e.value as Map<String, dynamic>;
                       final isFlagged = data['status'] == 'flagged';
                       return Container(

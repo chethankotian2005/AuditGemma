@@ -43,8 +43,28 @@ export interface CaseListItem {
 export interface CaseDetail {
   case_id: string;
   status: CaseStatusValue;
-  score: number | null;
   updated_at: string;
+  documents: any[];
+  algorithmic_score: number;
+  deductions: Array<{
+    check: string;
+    severity: string;
+    penalty: number;
+    reason: string;
+  }>;
+  gemma_adjustment: number;
+  gemma_adjustment_justification: string;
+  final_score: number;
+  score: number;
+  confidence: "high" | "moderate" | "low";
+  flagged_reasons: string[];
+  recommended_action:
+    | "approve"
+    | "escalate"
+    | "request_documents"
+    | "human_review";
+  reasoning_narrative: string;
+  signals: Signals;
 }
 
 /** Full response from POST /score — contains everything needed for the detail page */

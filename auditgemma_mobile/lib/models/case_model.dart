@@ -31,12 +31,22 @@ class CaseDetail {
   final String status;
   final int? score;
   final String updatedAt;
+  final String confidence;
+  final List<String> flaggedReasons;
+  final String recommendedAction;
+  final String reasoningNarrative;
+  final Map<String, dynamic> signals;
 
   CaseDetail({
     required this.caseId,
     required this.status,
     this.score,
     required this.updatedAt,
+    required this.confidence,
+    required this.flaggedReasons,
+    required this.recommendedAction,
+    required this.reasoningNarrative,
+    required this.signals,
   });
 
   factory CaseDetail.fromJson(Map<String, dynamic> json) {
@@ -44,7 +54,12 @@ class CaseDetail {
       caseId: json['case_id'] as String,
       status: json['status'] as String,
       score: json['score'] as int?,
-      updatedAt: json['updated_at'] as String,
+      updatedAt: json['updated_at'] as String? ?? '',
+      confidence: json['confidence'] as String? ?? 'low',
+      flaggedReasons: List<String>.from(json['flagged_reasons'] ?? []),
+      recommendedAction: json['recommended_action'] as String? ?? 'human_review',
+      reasoningNarrative: json['reasoning_narrative'] as String? ?? '',
+      signals: Map<String, dynamic>.from(json['signals'] ?? {}),
     );
   }
 
@@ -53,6 +68,11 @@ class CaseDetail {
         'status': status,
         'score': score,
         'updated_at': updatedAt,
+        'confidence': confidence,
+        'flagged_reasons': flaggedReasons,
+        'recommended_action': recommendedAction,
+        'reasoning_narrative': reasoningNarrative,
+        'signals': signals,
       };
 }
 

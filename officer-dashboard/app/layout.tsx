@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
-import { CaseDataProvider } from "@/context/CaseDataContext";
 import { AuthProvider } from "@/context/AuthContext";
 
 const inter = Inter({
@@ -35,10 +34,8 @@ export default function RootLayout({
     >
       <body>
         <AuthProvider>
-          <CaseDataProvider>
             <Navbar />
             <main>{children}</main>
-          </CaseDataProvider>
         </AuthProvider>
       </body>
     </html>

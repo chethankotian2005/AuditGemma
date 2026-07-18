@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { getCase, updateCaseStatus, getAuditLog, ApiError } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
-import { useCaseData } from "@/context/CaseDataContext";
 import type { CaseDetail, CaseScoreResponse, ConversationTurn, AuditLogEntry } from "@/lib/types";
 import ScoreGradient from "@/components/ScoreGradient";
 import ConfidenceBadge from "@/components/ConfidenceBadge";
@@ -32,7 +31,6 @@ interface PageProps {
 export default function CaseDetailPage({ params }: PageProps) {
   const { id } = use(params);
   const { logout } = useAuth();
-  const { getCachedCase } = useCaseData();
 
   const [caseDetail, setCaseDetail] = useState<CaseDetail | null>(null);
   const [auditLog, setAuditLog] = useState<AuditLogEntry[]>([]);
@@ -46,9 +44,6 @@ export default function CaseDetailPage({ params }: PageProps) {
 
   // Conversation history (for PDF export)
   const [conversationHistory, setConversationHistory] = useState<ConversationTurn[]>([]);
-
-  // Full cached data from CaseScoreResponse
-  const cachedData: CaseScoreResponse | null = getCachedCase(id);
 
   const fetchCase = useCallback(async () => {
     setLoading(true);
@@ -93,9 +88,6 @@ export default function CaseDetailPage({ params }: PageProps) {
     }
   };
 
-  const score = cachedData?.score ?? caseDetail?.score ?? null;
-  const hasFullData = cachedData !== null;
-
   return (
     <div className="page-container">
       {/* Back link */}
@@ -117,9 +109,9 @@ export default function CaseDetailPage({ params }: PageProps) {
               : "Loading…"}
           </p>
         </div>
-        {hasFullData && (
+        {caseDetail && (
           <ReportExport
-            caseData={cachedData}
+            caseData={caseDetail}
             conversationHistory={conversationHistory}
             auditLog={auditLog}
           />
@@ -140,64 +132,14 @@ export default function CaseDetailPage({ params }: PageProps) {
         <div className="stagger-children" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           <SkeletonLoader variant="card" count={3} />
         </div>
-      ) : !hasFullData ? (
-        /* Reduced view — only basic data from GET /case/{id} */
-        <div>
-          <div className="no-data-notice">
-            <ShieldAlert size={32} style={{ margin: "0 auto 12px", color: "var(--text-muted)" }} />
-            <h3>Limited View</h3>
-            <p>
-              Full case details (reasoning narrative, signals, flagged reasons) are
-              available when cases are scored through the dashboard.
-            </p>
-            <p>
-              Basic case information is shown below from the backend.
-            </p>
-          </div>
-
-          {score !== null && (
-            <div className="panel-card" style={{ marginBottom: "24px" }}>
-              <div className="panel-card-header">Risk Score</div>
-              <ScoreGradient score={score} variant="bar" animate />
-            </div>
-          )}
-
-          {/* Officer actions — always available */}
-          <div className="officer-actions">
-            <ActionButton
-              label="Approve"
-              status="approved"
-              icon={<CheckCircle2 size={16} />}
-              className="officer-btn-approve"
-              loading={actionLoading}
-              success={actionSuccess}
-              onClick={() => setConfirmAction("approved")}
-            />
-            <ActionButton
-              label="Escalate"
-              status="escalated"
-              icon={<AlertTriangle size={16} />}
-              className="officer-btn-escalate"
-              loading={actionLoading}
-              success={actionSuccess}
-              onClick={() => setConfirmAction("escalated")}
-            />
-            <ActionButton
-              label="Request Documents"
-              status="requires_documents"
-              icon={<FileText size={16} />}
-              className="officer-btn-request-docs"
-              loading={actionLoading}
-              success={actionSuccess}
-              onClick={() => setConfirmAction("requires_documents")}
-            />
-          </div>
-
-          {/* Chat — always available if the backend has this case */}
-          <ChatPanel caseId={id} />
+      ) : !caseDetail ? (
+        <div className="no-data-notice">
+          <ShieldAlert size={32} style={{ margin: "0 auto 12px", color: "var(--text-muted)" }} />
+          <h3>Case Not Found</h3>
+          <p>Could not load case details.</p>
         </div>
       ) : (
-        /* Full view — cached CaseScoreResponse available */
+        /* Full view */
         <div className="animate-fade-in">
           {/* Two-column layout */}
           <div className="case-detail-grid">
@@ -230,14 +172,14 @@ export default function CaseDetailPage({ params }: PageProps) {
                 <div className="score-hero">
                   <div className="score-hero-bar">
                     <ScoreGradient
-                      score={cachedData.score}
+                      score={caseDetail.score}
                       variant="bar"
                       animate
                     />
                   </div>
                   <div className="score-hero-badges">
-                    <ConfidenceBadge confidence={cachedData.confidence} />
-                    <StatusBadge status={caseDetail?.status ?? "pending"} />
+                    <ConfidenceBadge confidence={caseDetail.confidence} />
+                    <StatusBadge status={caseDetail.status ?? "pending"} />
                   </div>
                 </div>
               </div>
@@ -250,8 +192,8 @@ export default function CaseDetailPage({ params }: PageProps) {
                     <span>Base Score</span>
                     <span>100</span>
                   </div>
-                  {cachedData.deductions?.length > 0 ? (
-                    cachedData.deductions.map((deduction, i) => (
+                  {caseDetail.deductions?.length > 0 ? (
+                    caseDetail.deductions.map((deduction, i) => (
                       <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid var(--border-color)", color: "var(--text-danger)" }}>
                         <span>
                           <strong>{deduction.check.replace(/_/g, " ")}</strong>: {deduction.reason}
@@ -264,33 +206,33 @@ export default function CaseDetailPage({ params }: PageProps) {
                       No flags triggered.
                     </div>
                   )}
-                  {cachedData.algorithmic_score !== undefined && (
+                  {caseDetail.algorithmic_score !== undefined && (
                     <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid var(--border-color)", fontWeight: "600", background: "var(--surface-sunken)" }}>
                       <span>Algorithmic Score</span>
-                      <span>{cachedData.algorithmic_score}</span>
+                      <span>{caseDetail.algorithmic_score}</span>
                     </div>
                   )}
-                  {cachedData.gemma_adjustment !== undefined && (
-                    <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid var(--border-color)", color: cachedData.gemma_adjustment > 0 ? "var(--text-success)" : (cachedData.gemma_adjustment < 0 ? "var(--text-danger)" : "inherit") }}>
+                  {caseDetail.gemma_adjustment !== undefined && (
+                    <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid var(--border-color)", color: caseDetail.gemma_adjustment > 0 ? "var(--text-success)" : (caseDetail.gemma_adjustment < 0 ? "var(--text-danger)" : "inherit") }}>
                       <span>
-                        <strong>Gemma Adjustment</strong>: {cachedData.gemma_adjustment_justification}
+                        <strong>Gemma Adjustment</strong>: {caseDetail.gemma_adjustment_justification}
                       </span>
-                      <span>{cachedData.gemma_adjustment > 0 ? `+${cachedData.gemma_adjustment}` : cachedData.gemma_adjustment}</span>
+                      <span>{caseDetail.gemma_adjustment > 0 ? `+${caseDetail.gemma_adjustment}` : caseDetail.gemma_adjustment}</span>
                     </div>
                   )}
                   <div style={{ display: "flex", justifyContent: "space-between", paddingTop: "8px", fontWeight: "bold", fontSize: "16px" }}>
                     <span>Final Score</span>
-                    <span>{cachedData.final_score ?? cachedData.score}</span>
+                    <span>{caseDetail.final_score ?? caseDetail.score}</span>
                   </div>
                 </div>
               </div>
 
               {/* Flagged Reasons */}
-              {cachedData.flagged_reasons.length > 0 && (
+              {caseDetail.flagged_reasons.length > 0 && (
                 <div className="panel-card">
                   <div className="panel-card-header">Flagged Reasons</div>
                   <div className="flagged-chips">
-                    {cachedData.flagged_reasons.map((reason, i) => (
+                    {caseDetail.flagged_reasons.map((reason, i) => (
                       <span key={i} className="flagged-chip">
                         {reason}
                       </span>
@@ -300,12 +242,12 @@ export default function CaseDetailPage({ params }: PageProps) {
               )}
 
               {/* Recommended Action */}
-              <div className={`action-callout action-${cachedData.recommended_action}`}>
+              <div className={`action-callout action-${caseDetail.recommended_action}`}>
                 <BookOpen size={16} />
                 <span>
                   Recommended Action:{" "}
                   <strong>
-                    {cachedData.recommended_action.replace(/_/g, " ").toUpperCase()}
+                    {caseDetail.recommended_action.replace(/_/g, " ").toUpperCase()}
                   </strong>
                 </span>
               </div>
@@ -316,7 +258,7 @@ export default function CaseDetailPage({ params }: PageProps) {
                   Stage 2 — Deterministic Signals
                 </div>
                 <div className="signals-grid">
-                  {Object.entries(cachedData.signals).map(
+                  {Object.entries(caseDetail.signals).map(
                     ([key, value]) => (
                       <SignalCard
                         key={key}
@@ -331,7 +273,7 @@ export default function CaseDetailPage({ params }: PageProps) {
               {/* Reasoning Narrative — THE hero element */}
               <div className="panel-card">
                 <ReasoningNarrative
-                  narrative={cachedData.reasoning_narrative}
+                  narrative={caseDetail.reasoning_narrative}
                 />
               </div>
             </div>

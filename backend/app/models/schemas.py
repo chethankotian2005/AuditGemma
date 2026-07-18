@@ -52,3 +52,21 @@ class CaseStatus(BaseModel):
     status: Literal["pending", "approved", "escalated", "requires_documents"]
     score: int | None = None
     updated_at: str
+
+
+class CaseDetailResponse(BaseModel):
+    case_id: str
+    status: str
+    updated_at: str
+    documents: list[dict]
+    algorithmic_score: int
+    deductions: list[dict]
+    gemma_adjustment: int
+    gemma_adjustment_justification: str
+    final_score: int
+    score: int
+    confidence: Literal["high", "moderate", "low"]
+    flagged_reasons: list[str]
+    recommended_action: Literal["approve", "escalate", "request_documents", "human_review"]
+    reasoning_narrative: str
+    signals: dict

@@ -17,8 +17,8 @@ class Settings:
     GEMMA_MODEL_FALLBACK: str = os.getenv("GEMMA_MODEL_FALLBACK", "gemma3:1b")
 
     # Request timeouts — Thinking Mode calls run 3-15s, give headroom
-    GEMMA_TIMEOUT_FAST: float = float(os.getenv("GEMMA_TIMEOUT_FAST", "120.0"))       # thinking OFF calls (extraction, JSON scoring)
-    GEMMA_TIMEOUT_THINKING: float = float(os.getenv("GEMMA_TIMEOUT_THINKING", "180.0"))   # thinking ON calls (narrative, conversation)
+    GEMMA_TIMEOUT_FAST: float = float(os.getenv("GEMMA_TIMEOUT_FAST", "180.0"))       # thinking OFF calls (extraction, JSON scoring)
+    GEMMA_TIMEOUT_THINKING: float = float(os.getenv("GEMMA_TIMEOUT_THINKING", "240.0"))   # thinking ON calls (narrative, conversation)
 
     # Deterministic signal layer thresholds
     BENFORD_MIN_SAMPLE_SIZE: int = 30          # below this, Benford's Law is not statistically meaningful

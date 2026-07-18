@@ -8,8 +8,9 @@ RUN apt-get update && \
     python3 python3-pip curl pciutils zstd && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Ollama
-RUN curl -fsSL https://ollama.com/install.sh | sh
+# Install Ollama (pinned to 0.31.2 because newer 0.32.x versions require NVIDIA driver 550,
+# but Cloud Run L4 instances currently provide driver 535)
+RUN curl -fsSL https://ollama.com/install.sh | OLLAMA_VERSION="0.31.2" sh
 
 # Pre-pull the model during build to avoid cold-start downloads
 ENV OLLAMA_MODELS=/usr/share/ollama/.ollama/models

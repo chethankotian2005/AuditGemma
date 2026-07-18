@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { FileDown, Loader2 } from "lucide-react";
 import type { CaseDetail, ConversationTurn, AuditLogEntry } from "@/lib/types";
+import { formatDeductionReason } from "@/lib/score-utils";
 
 interface ReportExportProps {
   caseData: CaseDetail;
@@ -254,13 +255,13 @@ export default function ReportExport({
             )}
 
             {/* Flagged Reasons */}
-            {caseData.flagged_reasons.length > 0 && (
+            {caseData.deductions?.length > 0 && (
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Flagged Reasons</Text>
                 <View style={styles.flagRow}>
-                  {caseData.flagged_reasons.map((reason, i) => (
+                  {caseData.deductions.map((deduction, i) => (
                     <Text key={i} style={styles.flagChip}>
-                      {reason}
+                      {formatDeductionReason(deduction, caseData.signals)}
                     </Text>
                   ))}
                 </View>

@@ -18,6 +18,12 @@ import type { CaseDetail, CaseScoreResponse, ConversationTurn, AuditLogEntry } f
 import ScoreGradient from "@/components/ScoreGradient";
 import ConfidenceBadge from "@/components/ConfidenceBadge";
 import StatusBadge from "@/components/StatusBadge";
+import { 
+  scoreToHsl, 
+  formatRelativeTime, 
+  scoreGradientCSS, 
+  formatDeductionReason 
+} from "@/lib/score-utils";
 import SkeletonLoader from "@/components/SkeletonLoader";
 import SignalCard from "@/components/SignalCard";
 import ReasoningNarrative from "@/components/ReasoningNarrative";
@@ -36,6 +42,11 @@ export default function CaseDetailPage({ params }: PageProps) {
   const [auditLog, setAuditLog] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [messages, setMessages] = useState<{ role: string; content: string }[]>(
+    [],
+  );
+  const [isTyping, setIsTyping] = useState(false);
 
   // Action states
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -257,7 +268,7 @@ export default function CaseDetailPage({ params }: PageProps) {
                     caseDetail.deductions.map((deduction, i) => (
                       <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid var(--border-color)", color: "var(--text-danger)" }}>
                         <span>
-                          <strong>{deduction.check.replace(/_/g, " ")}</strong>: {deduction.reason}
+                          <strong>{deduction.check.replace(/_/g, " ")}</strong>: {formatDeductionReason(deduction, caseDetail.signals)}
                         </span>
                         <span>-{deduction.penalty}</span>
                       </div>
@@ -289,13 +300,13 @@ export default function CaseDetailPage({ params }: PageProps) {
               </div>
 
               {/* Flagged Reasons */}
-              {caseDetail.flagged_reasons.length > 0 && (
+              {caseDetail.deductions?.length > 0 && (
                 <div className="panel-card">
                   <div className="panel-card-header">Flagged Reasons</div>
                   <div className="flagged-chips">
-                    {caseDetail.flagged_reasons.map((reason, i) => (
+                    {caseDetail.deductions.map((deduction, i) => (
                       <span key={i} className="flagged-chip">
-                        {reason}
+                        {formatDeductionReason(deduction, caseDetail.signals)}
                       </span>
                     ))}
                   </div>

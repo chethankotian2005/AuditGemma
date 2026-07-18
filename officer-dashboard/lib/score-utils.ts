@@ -71,6 +71,27 @@ export function formatScore(score: number): string {
   return Math.round(score).toString().padStart(2, "0");
 }
 
+export function formatDeductionReason(deduction: any, signals: any): string {
+  const data = signals?.[deduction.check];
+  if (!data) return deduction.reason;
+
+  if (deduction.check === "transaction_velocity") {
+    return `High velocity: ${data.max_transactions_in_window} transactions in ${data.window_hours || 24} hours.`;
+  }
+  if (deduction.check === "benfords_law") {
+    return `Chi-square value ${data.chi_square} exceeds threshold ${data.chi_square_critical_value}.`;
+  }
+  if (deduction.check === "threshold_anomaly") {
+    const maxOutlier = data.outliers?.reduce((max: any, o: any) => 
+      Math.abs(o.modified_z_score) > Math.abs(max.modified_z_score) ? o : max
+    , data.outliers[0]);
+    if (maxOutlier) {
+      return `MAD outlier detected: ₹${maxOutlier.amount} with Z-score ${maxOutlier.modified_z_score}.`;
+    }
+  }
+  return deduction.reason;
+}
+
 /** Format an ISO timestamp to a relative time string */
 export function formatRelativeTime(isoString: string): string {
   const date = new Date(isoString);

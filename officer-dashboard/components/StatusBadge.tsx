@@ -10,6 +10,7 @@ const classMap: Record<CaseStatusValue, string> = {
   approved: "status-badge status-approved",
   escalated: "status-badge status-escalated",
   requires_documents: "status-badge status-requires-docs",
+  rejected: "status-badge status-rejected",
 };
 
 export default function StatusBadge({ status }: StatusBadgeProps) {
